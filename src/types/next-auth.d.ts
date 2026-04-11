@@ -8,11 +8,13 @@ declare module "next-auth" {
       image?: string | null;
     };
     facebookLink?: string;
+    role?: string;
   }
 }
 
 declare module "next-auth/jwt" {
   interface JWT {
     facebookLink?: string;
+    role?: string;
   }
 }
