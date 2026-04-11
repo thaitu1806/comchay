@@ -6,6 +6,8 @@ import { calculateShippingFee } from "@/lib/shipping";
 import { sendOrderNotification } from "@/lib/telegram";
 import { validateOrderForm } from "./validation";
 
+export const dynamic = "force-dynamic";
+
 interface OrderItemInput {
   productId: number;
   productName: string;

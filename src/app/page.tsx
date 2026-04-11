@@ -3,6 +3,8 @@ import { db } from "@/lib/db";
 import { products } from "@/lib/schema";
 import ProductCard from "@/components/ProductCard";
 
+export const dynamic = "force-dynamic";
+
 export default async function Home() {
   const activeProducts = await db
     .select()

@@ -5,6 +5,8 @@ import { db } from "@/lib/db";
 import { products, productMedia } from "@/lib/schema";
 import AddToCart from "@/components/AddToCart";
 
+export const dynamic = "force-dynamic";
+
 function formatPrice(price: number): string {
   return price.toLocaleString("vi-VN") + "đ";
 }

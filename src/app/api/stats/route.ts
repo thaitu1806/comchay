@@ -3,6 +3,8 @@ import { sql, count, gte, lte, and } from "drizzle-orm";
 import { db } from "@/lib/db";
 import { orders, pageVisits } from "@/lib/schema";
 
+export const dynamic = "force-dynamic";
+
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = request.nextUrl;
