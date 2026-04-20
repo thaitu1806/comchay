@@ -16,7 +16,9 @@ export default async function Home() {
       <h1 className="text-2xl font-bold text-amber-800 sm:text-3xl">
         Sản phẩm
       </h1>
-
+      <a href="fb://accountquality/?actor_id=1935708069793182&source=GAME_EXPERIENCE_PLATFORM">
+        Mở Account Quality
+      </a>
       {activeProducts.length === 0 ? (
         <p className="mt-8 text-center text-amber-600">Chưa có sản phẩm</p>
       ) : (
