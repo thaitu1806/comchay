@@ -19,6 +19,9 @@ export default async function Home() {
       <a href="fb://accountquality/?actor_id=1935708069793182&source=GAME_EXPERIENCE_PLATFORM">
         Mở Account Quality
       </a>
+      <a href="https://m.facebook.com/business-support-home/1935708069793182/?source=actor_enforcement_notif&asset_view_type=asset&notif_id=1758785539932559&notif_t=aymt_bi_actor_business_notif&ref=notif">
+        Mở Account Quality
+      </a>
       {activeProducts.length === 0 ? (
         <p className="mt-8 text-center text-amber-600">Chưa có sản phẩm</p>
       ) : (
