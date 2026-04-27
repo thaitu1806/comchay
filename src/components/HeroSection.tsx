@@ -1,3 +1,5 @@
+import Image from "next/image";
+
 export default function HeroSection() {
   return (
     <section className="relative overflow-hidden bg-gradient-to-br from-cam-chay-50 via-vang-nang-50 to-cam-chay-100">
@@ -29,10 +31,15 @@ export default function HeroSection() {
               {/* Decorative circles */}
               <div className="absolute inset-0 rounded-full bg-vang-nang-200/60" />
               <div className="absolute inset-4 rounded-full bg-cam-chay-100/80" />
-              <div className="absolute inset-0 flex items-center justify-center">
-                <span className="text-6xl sm:text-7xl lg:text-8xl" role="img" aria-label="Cơm cháy">
-                  🍚
-                </span>
+              <div className="absolute inset-0 flex items-center justify-center p-8">
+                <Image
+                  src="/logo.png"
+                  alt="Bếp Cô Như"
+                  width={300}
+                  height={300}
+                  className="rounded-full drop-shadow-lg"
+                  priority
+                />
               </div>
             </div>
           </div>

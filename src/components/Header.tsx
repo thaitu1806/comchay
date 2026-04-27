@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { useState, useEffect } from "react";
 import { useCartStore } from "@/store/cart";
 
@@ -30,8 +31,18 @@ export default function Header({ hotline: hotlineProp }: HeaderProps) {
     <header className="bg-cam-chay-50 border-b border-cam-chay-200 sticky top-0 z-50">
       <div className="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between">
         {/* Logo */}
-        <Link href="/" className="text-xl font-bold text-cam-chay-800 hover:text-cam-chay-900">
-          Bếp Cô Như
+        <Link href="/" className="flex items-center gap-2">
+          <Image
+            src="/logo.png"
+            alt="Bếp Cô Như"
+            width={40}
+            height={40}
+            className="rounded-full"
+            priority
+          />
+          <span className="text-xl font-bold text-cam-chay-800 hover:text-cam-chay-900 hidden sm:inline">
+            Bếp Cô Như
+          </span>
         </Link>
 
         {/* Desktop nav */}
