@@ -38,13 +38,13 @@ export function getAvailableOptions(
   weights: number[];
 } {
   // Bước 1: Lấy tất cả riceTypes (không phụ thuộc lựa chọn)
-  const riceTypes = [
-    ...new Set(
+  const riceTypes = Array.from(
+    new Set(
       variants
         .map((v) => v.riceType)
         .filter((rt): rt is string => rt !== null)
-    ),
-  ];
+    )
+  );
 
   // Bước 2: Lọc biến thể theo riceType đã chọn (nếu có)
   let filteredForSpice = variants;
@@ -54,13 +54,13 @@ export function getAvailableOptions(
     );
   }
 
-  const spiceLevels = [
-    ...new Set(
+  const spiceLevels = Array.from(
+    new Set(
       filteredForSpice
         .map((v) => v.spiceLevel)
         .filter((sl): sl is string => sl !== null)
-    ),
-  ];
+    )
+  );
 
   // Bước 3: Lọc biến thể theo cả riceType và spiceLevel (nếu có)
   let filteredForWeight = filteredForSpice;
@@ -70,7 +70,7 @@ export function getAvailableOptions(
     );
   }
 
-  const weights = [...new Set(filteredForWeight.map((v) => v.weight))];
+  const weights = Array.from(new Set(filteredForWeight.map((v) => v.weight)));
 
   return { riceTypes, spiceLevels, weights };
 }
