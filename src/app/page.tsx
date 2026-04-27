@@ -78,6 +78,7 @@ export default async function Home() {
             {productsWithPriceRange.map((product, index) => (
               <ProductCard
                 key={product.id}
+                productId={product.id}
                 name={product.name}
                 slug={product.slug}
                 price={product.price}
@@ -85,6 +86,7 @@ export default async function Home() {
                 badge={product.badge}
                 priceRange={product.priceRange}
                 stockStatus={product.stockStatus}
+                hasVariants={product.variants.length > 0}
                 loading={index < 4 ? "eager" : "lazy"}
               />
             ))}
