@@ -5,8 +5,11 @@
  * Retry tối đa 3 lần, khoảng cách 5 giây giữa mỗi lần.
  */
 
+import type { Region } from "./shipping";
+
 export interface OrderItem {
   productName: string;
+  variantLabel?: string;
   quantity: number;
   lineTotal: number;
 }
@@ -16,11 +19,17 @@ export interface TelegramOrder {
   phone: string;
   address: string;
   facebookLink?: string;
+  region?: Region;
   items: OrderItem[];
   subtotal: number;
   shippingFee: number;
   total: number;
 }
+
+const REGION_LABELS: Record<string, string> = {
+  HCM: "HCM",
+  TINH_KHAC: "Tỉnh khác",
+};
 
 /**
  * Format đơn hàng thành chuỗi tin nhắn Telegram.
@@ -34,6 +43,10 @@ export function formatOrderMessage(order: TelegramOrder): string {
     `📍 Địa chỉ: ${order.address}`,
   ];
 
+  if (order.region) {
+    lines.push(`🏠 Khu vực: ${REGION_LABELS[order.region] ?? order.region}`);
+  }
+
   if (order.facebookLink) {
     lines.push(`🔗 Facebook: ${order.facebookLink}`);
   }
@@ -44,6 +57,9 @@ export function formatOrderMessage(order: TelegramOrder): string {
     lines.push(
       `  - ${item.productName} x${item.quantity} = ${item.lineTotal.toLocaleString("vi-VN")}đ`
     );
+    if (item.variantLabel) {
+      lines.push(`    📋 ${item.variantLabel}`);
+    }
   }
 
   lines.push(

@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { eq } from "drizzle-orm";
 import { db } from "@/lib/db";
-import { products, productMedia } from "@/lib/schema";
+import { products, productMedia, productVariants } from "@/lib/schema";
 
 export async function GET(
   _request: Request,
@@ -36,7 +36,12 @@ export async function GET(
       .where(eq(productMedia.productId, productId))
       .orderBy(productMedia.sortOrder);
 
-    return NextResponse.json({ ...product, media });
+    const variants = await db
+      .select()
+      .from(productVariants)
+      .where(eq(productVariants.productId, productId));
+
+    return NextResponse.json({ ...product, media, variants });
   } catch (error) {
     console.error("Failed to fetch product:", error);
     return NextResponse.json(
@@ -106,7 +111,7 @@ export async function PUT(
     }
 
     const body = await request.json();
-    const { name, description, price, thumbnailUrl, slug, status } = body;
+    const { name, description, price, thumbnailUrl, slug, status, badge, stockStatus } = body;
 
     const [updated] = await db
       .update(products)
@@ -117,6 +122,8 @@ export async function PUT(
         ...(thumbnailUrl !== undefined && { thumbnailUrl }),
         ...(slug !== undefined && { slug }),
         ...(status !== undefined && { status }),
+        ...(badge !== undefined && { badge }),
+        ...(stockStatus !== undefined && { stockStatus }),
         updatedAt: new Date().toISOString(),
       })
       .where(eq(products.id, productId))

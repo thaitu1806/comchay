@@ -1,6 +1,6 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
-import { calculateShippingFee } from "@/lib/shipping";
+import { calculateShippingFee, type Region } from "@/lib/shipping";
 
 export interface CartItem {
   productId: number;
@@ -8,6 +8,19 @@ export interface CartItem {
   productPrice: number;
   thumbnailUrl: string;
   quantity: number;
+  variantId: number | null;   // null if product has no variants
+  riceType: string | null;
+  spiceLevel: string | null;
+  weight: number | null;       // gram
+}
+
+/**
+ * Generate a unique cart key for an item based on productId and variantId.
+ * Same productId + same variantId → same key (merge quantities).
+ * Same productId + different variantId → different key (separate lines).
+ */
+export function getCartKey(item: Pick<CartItem, "productId" | "variantId">): string {
+  return `${item.productId}-${item.variantId ?? "default"}`;
 }
 
 interface CartState {
@@ -18,15 +31,19 @@ interface CartState {
       productName: string;
       productPrice: number;
       thumbnailUrl: string;
+      variantId?: number | null;
+      riceType?: string | null;
+      spiceLevel?: string | null;
+      weight?: number | null;
     },
     quantity: number
   ) => void;
-  updateQuantity: (productId: number, quantity: number) => void;
-  removeItem: (productId: number) => void;
+  updateQuantity: (cartKey: string, quantity: number) => void;
+  removeItem: (cartKey: string) => void;
   clearCart: () => void;
   getTotalBags: () => number;
   getSubtotal: () => number;
-  getShippingFee: () => number;
+  getShippingFee: (region?: Region) => number;
   getTotal: () => number;
 }
 
@@ -36,14 +53,19 @@ export const useCartStore = create<CartState>()(
   items: [],
 
   addItem: (product, quantity) => {
+    const newItemKey = getCartKey({
+      productId: product.productId,
+      variantId: product.variantId ?? null,
+    });
+
     set((state) => {
       const existing = state.items.find(
-        (item) => item.productId === product.productId
+        (item) => getCartKey(item) === newItemKey
       );
       if (existing) {
         return {
           items: state.items.map((item) =>
-            item.productId === product.productId
+            getCartKey(item) === newItemKey
               ? { ...item, quantity: item.quantity + quantity }
               : item
           ),
@@ -58,28 +80,32 @@ export const useCartStore = create<CartState>()(
             productPrice: product.productPrice,
             thumbnailUrl: product.thumbnailUrl,
             quantity,
+            variantId: product.variantId ?? null,
+            riceType: product.riceType ?? null,
+            spiceLevel: product.spiceLevel ?? null,
+            weight: product.weight ?? null,
           },
         ],
       };
     });
   },
 
-  updateQuantity: (productId, quantity) => {
+  updateQuantity: (cartKey, quantity) => {
     set((state) => {
       if (quantity <= 0) {
-        return { items: state.items.filter((item) => item.productId !== productId) };
+        return { items: state.items.filter((item) => getCartKey(item) !== cartKey) };
       }
       return {
         items: state.items.map((item) =>
-          item.productId === productId ? { ...item, quantity } : item
+          getCartKey(item) === cartKey ? { ...item, quantity } : item
         ),
       };
     });
   },
 
-  removeItem: (productId) => {
+  removeItem: (cartKey) => {
     set((state) => ({
-      items: state.items.filter((item) => item.productId !== productId),
+      items: state.items.filter((item) => getCartKey(item) !== cartKey),
     }));
   },
 
@@ -98,8 +124,8 @@ export const useCartStore = create<CartState>()(
     );
   },
 
-  getShippingFee: () => {
-    return calculateShippingFee(get().getTotalBags());
+  getShippingFee: (region: Region = "HCM") => {
+    return calculateShippingFee(get().getTotalBags(), region);
   },
 
   getTotal: () => {

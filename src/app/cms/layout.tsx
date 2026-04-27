@@ -9,6 +9,7 @@ const navItems = [
   { href: "/cms", label: "Dashboard" },
   { href: "/cms/san-pham", label: "Sản phẩm" },
   { href: "/cms/don-hang", label: "Đơn hàng" },
+  { href: "/cms/noi-dung", label: "Nội dung" },
 ];
 
 export default function CmsLayout({ children }: { children: React.ReactNode }) {

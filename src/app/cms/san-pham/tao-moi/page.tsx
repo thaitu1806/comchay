@@ -13,11 +13,24 @@ export default function CreateProductPage() {
     slug: string;
     thumbnailUrl: string;
     media: { url: string; type: string }[];
+    variants: { id?: number; riceType: string; spiceLevel: string; weight: number | ""; price: number | "" }[];
+    badge: string;
+    stockStatus: string;
   }) {
     const res = await fetch("/api/products", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(data),
+      body: JSON.stringify({
+        name: data.name,
+        description: data.description,
+        price: data.price,
+        slug: data.slug,
+        thumbnailUrl: data.thumbnailUrl,
+        media: data.media,
+        variants: data.variants,
+        badge: data.badge || null,
+        stockStatus: data.stockStatus,
+      }),
     });
 
     if (res.ok) {

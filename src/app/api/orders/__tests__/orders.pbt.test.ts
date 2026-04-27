@@ -40,6 +40,9 @@ describe("OrderForm — Property 9: Validate required fields on order form", () 
     fc.constant("   ")
   );
 
+  // Valid region
+  const validRegion = fc.oneof(fc.constant("HCM"), fc.constant("TINH_KHAC"));
+
   it("should reject when customerName is missing/empty (other fields valid)", () => {
     fc.assert(
       fc.property(
@@ -47,8 +50,9 @@ describe("OrderForm — Property 9: Validate required fields on order form", () 
         nonEmptyString,
         validPhone,
         validItems,
-        (customerName, address, phone, items) => {
-          const errors = validateOrderForm({ customerName, address, phone, items });
+        validRegion,
+        (customerName, address, phone, items, region) => {
+          const errors = validateOrderForm({ customerName, address, phone, items, region });
           expect(errors.length).toBeGreaterThan(0);
           expect(errors).toContain("Tên khách hàng là bắt buộc");
         }
@@ -64,8 +68,9 @@ describe("OrderForm — Property 9: Validate required fields on order form", () 
         emptyValue,
         validPhone,
         validItems,
-        (customerName, address, phone, items) => {
-          const errors = validateOrderForm({ customerName, address, phone, items });
+        validRegion,
+        (customerName, address, phone, items, region) => {
+          const errors = validateOrderForm({ customerName, address, phone, items, region });
           expect(errors.length).toBeGreaterThan(0);
           expect(errors).toContain("Địa chỉ là bắt buộc");
         }
@@ -81,8 +86,9 @@ describe("OrderForm — Property 9: Validate required fields on order form", () 
         nonEmptyString,
         emptyValue,
         validItems,
-        (customerName, address, phone, items) => {
-          const errors = validateOrderForm({ customerName, address, phone, items });
+        validRegion,
+        (customerName, address, phone, items, region) => {
+          const errors = validateOrderForm({ customerName, address, phone, items, region });
           expect(errors.length).toBeGreaterThan(0);
           expect(errors).toContain("Số điện thoại là bắt buộc");
         }
@@ -99,6 +105,7 @@ describe("OrderForm — Property 9: Validate required fields on order form", () 
         address: fc.oneof(nonEmptyString, emptyValue),
         phone: fc.oneof(validPhone, emptyValue),
         items: validItems,
+        region: validRegion,
       })
       .filter((data) => {
         // Ensure at least one required field is actually missing/empty
@@ -218,6 +225,100 @@ describe("Orders — Property 12: Filter orders by date range", () => {
           expect(isOutside).toBe(false);
         }
       }),
+      { numRuns: 100 }
+    );
+  });
+});
+
+
+/**
+ * **Validates: Requirements 8.2, 8.6**
+ *
+ * Property 8: Validate form đặt hàng V2
+ * For any dữ liệu form đặt hàng mà thiếu ít nhất một trong các trường bắt buộc
+ * (tên, địa chỉ, số điện thoại, khu vực) hoặc có danh sách sản phẩm rỗng,
+ * validation phải từ chối và trả về lỗi. Khi tất cả trường bắt buộc hợp lệ
+ * và danh sách sản phẩm không rỗng, validation phải chấp nhận.
+ */
+describe("OrderForm — Property 8: Validate form đặt hàng V2 (region validation)", () => {
+  // Arbitrary for a non-empty trimmed string (valid field value)
+  const nonEmptyString = fc
+    .string({ minLength: 1 })
+    .filter((s) => s.trim().length > 0);
+
+  // Valid Vietnamese phone: '0' + 9 digits
+  const validPhone = fc
+    .array(fc.integer({ min: 0, max: 9 }), { minLength: 9, maxLength: 9 })
+    .map((digits) => "0" + digits.join(""));
+
+  // At least one valid order item
+  const validItems = fc.array(
+    fc.record({
+      productId: fc.integer({ min: 1, max: 1000 }),
+      productName: nonEmptyString,
+      productPrice: fc.integer({ min: 1000, max: 1000000 }),
+      quantity: fc.integer({ min: 1, max: 100 }),
+    }),
+    { minLength: 1, maxLength: 5 }
+  );
+
+  // Valid region values
+  const validRegion = fc.oneof(fc.constant("HCM"), fc.constant("TINH_KHAC"));
+
+  // Invalid region: undefined, null, empty string, whitespace, or a string not in valid set
+  const invalidRegion = fc.oneof(
+    fc.constant(undefined),
+    fc.constant(null),
+    fc.constant(""),
+    fc.constant("   "),
+    fc.constant("INVALID"),
+    fc.constant("hcm"),
+    fc.constant("tinh_khac")
+  );
+
+  it("should reject when region is missing or invalid (other fields valid)", () => {
+    fc.assert(
+      fc.property(
+        nonEmptyString,
+        nonEmptyString,
+        validPhone,
+        validItems,
+        invalidRegion,
+        (customerName, address, phone, items, region) => {
+          const errors = validateOrderForm({
+            customerName,
+            address,
+            phone,
+            items,
+            region,
+          });
+          expect(errors.length).toBeGreaterThan(0);
+          expect(errors).toContain("Vui lòng chọn khu vực giao hàng");
+        }
+      ),
+      { numRuns: 100 }
+    );
+  });
+
+  it("should accept when all required fields are valid including region", () => {
+    fc.assert(
+      fc.property(
+        nonEmptyString,
+        nonEmptyString,
+        validPhone,
+        validItems,
+        validRegion,
+        (customerName, address, phone, items, region) => {
+          const errors = validateOrderForm({
+            customerName,
+            address,
+            phone,
+            items,
+            region,
+          });
+          expect(errors.length).toBe(0);
+        }
+      ),
       { numRuns: 100 }
     );
   });

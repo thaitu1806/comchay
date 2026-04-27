@@ -4,6 +4,14 @@ import { useEffect, useState } from "react";
 import { useRouter, useParams } from "next/navigation";
 import ProductForm from "@/components/ProductForm";
 
+interface VariantData {
+  id: number;
+  riceType: string | null;
+  spiceLevel: string | null;
+  weight: number;
+  price: number;
+}
+
 interface ProductData {
   name: string;
   description: string | null;
@@ -11,6 +19,9 @@ interface ProductData {
   slug: string;
   thumbnailUrl: string | null;
   media?: { url: string; type: string }[];
+  variants?: VariantData[];
+  badge?: string | null;
+  stockStatus?: string | null;
 }
 
 export default function EditProductPage() {
@@ -48,11 +59,24 @@ export default function EditProductPage() {
     slug: string;
     thumbnailUrl: string;
     media: { url: string; type: string }[];
+    variants: { id?: number; riceType: string; spiceLevel: string; weight: number | ""; price: number | "" }[];
+    badge: string;
+    stockStatus: string;
   }) {
     const res = await fetch(`/api/products/${id}`, {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(data),
+      body: JSON.stringify({
+        name: data.name,
+        description: data.description,
+        price: data.price,
+        slug: data.slug,
+        thumbnailUrl: data.thumbnailUrl,
+        media: data.media,
+        variants: data.variants,
+        badge: data.badge || null,
+        stockStatus: data.stockStatus,
+      }),
     });
 
     if (res.ok) {
@@ -94,6 +118,15 @@ export default function EditProductPage() {
             url: m.url,
             type: m.type as "image" | "video",
           })),
+          variants: (product.variants ?? []).map((v) => ({
+            id: v.id,
+            riceType: v.riceType ?? "",
+            spiceLevel: v.spiceLevel ?? "",
+            weight: v.weight,
+            price: v.price,
+          })),
+          badge: product.badge ?? "",
+          stockStatus: product.stockStatus ?? "in_stock",
         }}
         onSubmit={handleSubmit}
       />

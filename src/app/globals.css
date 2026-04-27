@@ -3,6 +3,11 @@
 @tailwind utilities;
 
 @layer base {
+  :root {
+    --color-cam-chay: #FF6600;
+    --color-vang-nang: #FFB800;
+  }
+
   body {
     @apply antialiased;
   }

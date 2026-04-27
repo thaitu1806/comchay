@@ -4,9 +4,15 @@ import { authOptions } from "@/lib/auth";
 describe("NextAuth configuration — Facebook OAuth", () => {
   it("Facebook provider is configured", () => {
     const providers = authOptions.providers;
-    expect(providers).toHaveLength(1);
+    expect(providers).toHaveLength(2);
     expect(providers[0].id).toBe("facebook");
     expect(providers[0].name).toBe("Facebook");
+  });
+
+  it("CMS Credentials provider is configured", () => {
+    const providers = authOptions.providers;
+    expect(providers[1].id).toBe("credentials");
+    expect(providers[1].name).toBe("Credentials");
   });
 
   describe("jwt callback", () => {

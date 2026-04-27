@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { eq } from "drizzle-orm";
 import { db } from "@/lib/db";
-import { products, productMedia } from "@/lib/schema";
+import { products, productMedia, productVariants } from "@/lib/schema";
 
 export async function GET(
   _request: Request,
@@ -29,7 +29,12 @@ export async function GET(
       .where(eq(productMedia.productId, product.id))
       .orderBy(productMedia.sortOrder);
 
-    return NextResponse.json({ ...product, media });
+    const variants = await db
+      .select()
+      .from(productVariants)
+      .where(eq(productVariants.productId, product.id));
+
+    return NextResponse.json({ ...product, media, variants });
   } catch (error) {
     console.error("Failed to fetch product by slug:", error);
     return NextResponse.json(

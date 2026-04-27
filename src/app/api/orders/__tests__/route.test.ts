@@ -39,6 +39,7 @@ const validBody = {
   address: "123 Đường ABC, Quận 1, TP.HCM",
   phone: "0901234567",
   facebookLink: "https://facebook.com/test",
+  region: "HCM",
   items: [
     { productId: 1, productName: "Cơm cháy", productPrice: 50000, quantity: 2 },
     { productId: 2, productName: "Cơm cháy đặc biệt", productPrice: 70000, quantity: 1 },
@@ -147,6 +148,7 @@ describe("POST /api/orders", () => {
       customerName: "Test",
       address: "Test Address",
       phone: "0901234567",
+      region: "HCM",
       items: [{ productId: 1, productName: "Cơm cháy", productPrice: 50000, quantity: 1 }],
     };
 
@@ -170,6 +172,141 @@ describe("POST /api/orders", () => {
     expect(json.error).toBeDefined();
   });
 
+  it("creates order with variantId and variantLabel in items", async () => {
+    const createdOrder = {
+      id: 4,
+      customerName: "Nguyễn Văn B",
+      address: "456 Đường XYZ, Quận 3, TP.HCM",
+      phone: "0912345678",
+      facebookLink: null,
+      region: "TINH_KHAC",
+      subtotal: 138000,
+      shippingFee: 30000,
+      total: 168000,
+      status: "mới",
+      createdAt: "2024-01-01",
+    };
+
+    mockReturning.mockResolvedValueOnce([createdOrder]);
+
+    const body = {
+      customerName: "Nguyễn Văn B",
+      address: "456 Đường XYZ, Quận 3, TP.HCM",
+      phone: "0912345678",
+      region: "TINH_KHAC",
+      items: [
+        {
+          productId: 1,
+          productName: "Cơm cháy",
+          productPrice: 69000,
+          quantity: 1,
+          variantId: 5,
+          variantLabel: "Gạo Lứt - Cay vừa - 250g",
+        },
+        {
+          productId: 1,
+          productName: "Cơm cháy",
+          productPrice: 69000,
+          quantity: 1,
+          variantId: 8,
+          variantLabel: "Gạo Thường - Không cay - 250g",
+        },
+      ],
+    };
+
+    const res = await POST(makeRequest(body));
+    expect(res.status).toBe(201);
+
+    const json = await res.json();
+    expect(json.items).toHaveLength(2);
+    expect(json.items[0].variantId).toBe(5);
+    expect(json.items[0].variantLabel).toBe("Gạo Lứt - Cay vừa - 250g");
+    expect(json.items[1].variantId).toBe(8);
+    expect(json.items[1].variantLabel).toBe("Gạo Thường - Không cay - 250g");
+  });
+
+  it("defaults variantId and variantLabel to null when not provided", async () => {
+    const createdOrder = {
+      id: 5,
+      customerName: "Test",
+      address: "Test Address",
+      phone: "0901234567",
+      facebookLink: null,
+      subtotal: 50000,
+      shippingFee: 30000,
+      total: 80000,
+      status: "mới",
+      createdAt: "2024-01-01",
+    };
+
+    mockReturning.mockResolvedValueOnce([createdOrder]);
+
+    const body = {
+      customerName: "Test",
+      address: "Test Address",
+      phone: "0901234567",
+      region: "HCM",
+      items: [{ productId: 1, productName: "Cơm cháy", productPrice: 50000, quantity: 1 }],
+    };
+
+    const res = await POST(makeRequest(body));
+    expect(res.status).toBe(201);
+
+    const json = await res.json();
+    expect(json.items[0].variantId).toBeNull();
+    expect(json.items[0].variantLabel).toBeNull();
+  });
+
+  it("sends Telegram notification with region and variantLabel", async () => {
+    const createdOrder = {
+      id: 6,
+      customerName: "Test Variant",
+      address: "Test Address",
+      phone: "0901234567",
+      facebookLink: null,
+      subtotal: 69000,
+      shippingFee: 30000,
+      total: 99000,
+      status: "mới",
+      createdAt: "2024-01-01",
+    };
+
+    mockReturning.mockResolvedValueOnce([createdOrder]);
+
+    const body = {
+      customerName: "Test Variant",
+      address: "Test Address",
+      phone: "0901234567",
+      region: "TINH_KHAC",
+      items: [
+        {
+          productId: 1,
+          productName: "Cơm cháy",
+          productPrice: 69000,
+          quantity: 1,
+          variantId: 5,
+          variantLabel: "Gạo Lứt - Cay vừa - 250g",
+        },
+      ],
+    };
+
+    await POST(makeRequest(body));
+
+    expect(sendOrderNotification).toHaveBeenCalledWith(
+      expect.objectContaining({
+        region: "TINH_KHAC",
+        items: expect.arrayContaining([
+          expect.objectContaining({
+            productName: "Cơm cháy",
+            variantLabel: "Gạo Lứt - Cay vừa - 250g",
+            quantity: 1,
+            lineTotal: 69000,
+          }),
+        ]),
+      })
+    );
+  });
+
   it("handles facebookLink as optional", async () => {
     const createdOrder = {
       id: 3,
@@ -190,6 +327,7 @@ describe("POST /api/orders", () => {
       customerName: "Test",
       address: "Test Address",
       phone: "0901234567",
+      region: "HCM",
       items: [{ productId: 1, productName: "Cơm cháy", productPrice: 50000, quantity: 1 }],
     };
 

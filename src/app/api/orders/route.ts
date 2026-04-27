@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { desc, gte, lte, and } from "drizzle-orm";
 import { db } from "@/lib/db";
 import { orders, orderItems } from "@/lib/schema";
-import { calculateShippingFee } from "@/lib/shipping";
+import { calculateShippingFee, type Region } from "@/lib/shipping";
 import { sendOrderNotification } from "@/lib/telegram";
 import { validateOrderForm } from "./validation";
 
@@ -13,19 +13,24 @@ interface OrderItemInput {
   productName: string;
   productPrice: number;
   quantity: number;
+  variantId?: number;
+  variantLabel?: string;
 }
 
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { customerName, address, phone, facebookLink, items } = body;
+    const { customerName, address, phone, facebookLink, items, region } = body;
 
-    // Validate required fields
-    const errors = validateOrderForm({ customerName, address, phone, facebookLink, items });
+    // Validate required fields (including region)
+    const errors = validateOrderForm({ customerName, address, phone, facebookLink, items, region });
 
     if (errors.length > 0) {
       return NextResponse.json({ errors }, { status: 400 });
     }
+
+    // Region is validated at this point
+    const orderRegion: Region = region as Region;
 
     // Calculate totals
     const orderItemsData = (items as OrderItemInput[]).map((item) => ({
@@ -34,11 +39,13 @@ export async function POST(request: NextRequest) {
       productPrice: item.productPrice,
       quantity: item.quantity,
       lineTotal: item.productPrice * item.quantity,
+      variantId: item.variantId ?? null,
+      variantLabel: item.variantLabel ?? null,
     }));
 
     const subtotal = orderItemsData.reduce((sum, item) => sum + item.lineTotal, 0);
     const totalBags = orderItemsData.reduce((sum, item) => sum + item.quantity, 0);
-    const shippingFee = calculateShippingFee(totalBags);
+    const shippingFee = calculateShippingFee(totalBags, orderRegion);
     const total = subtotal + shippingFee;
 
     // Insert order into DB
@@ -49,6 +56,7 @@ export async function POST(request: NextRequest) {
         address: address.trim(),
         phone: phone.trim(),
         facebookLink: facebookLink || null,
+        region: orderRegion,
         subtotal,
         shippingFee,
         total,
@@ -64,6 +72,8 @@ export async function POST(request: NextRequest) {
         productPrice: item.productPrice,
         quantity: item.quantity,
         lineTotal: item.lineTotal,
+        variantId: item.variantId,
+        variantLabel: item.variantLabel,
       }))
     );
 
@@ -73,8 +83,10 @@ export async function POST(request: NextRequest) {
       phone: createdOrder.phone,
       address: createdOrder.address,
       facebookLink: createdOrder.facebookLink ?? undefined,
+      region: orderRegion,
       items: orderItemsData.map((item) => ({
         productName: item.productName,
+        variantLabel: item.variantLabel ?? undefined,
         quantity: item.quantity,
         lineTotal: item.lineTotal,
       })),
