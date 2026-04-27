@@ -4,8 +4,13 @@ import { NextRequest, NextResponse } from "next/server";
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
-  // Only protect /cms routes (except /cms/login)
-  if (pathname.startsWith("/cms") && pathname !== "/cms/login") {
+  // Don't protect login page or auth API routes
+  if (pathname === "/cms/login" || pathname.startsWith("/api/auth")) {
+    return NextResponse.next();
+  }
+
+  // Protect /cms routes
+  if (pathname.startsWith("/cms")) {
     const token = await getToken({ req: request, secret: process.env.NEXTAUTH_SECRET });
 
     if (!token || token.role !== "admin") {
