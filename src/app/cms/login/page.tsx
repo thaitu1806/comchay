@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import { signIn } from "next-auth/react";
 import { useRouter } from "next/navigation";
 
 export default function CmsLoginPage() {
@@ -16,19 +15,24 @@ export default function CmsLoginPage() {
     setError("");
     setLoading(true);
 
-    const result = await signIn("cms-login", {
-      username,
-      password,
-      redirect: false,
-    });
+    try {
+      const res = await fetch("/api/cms-auth/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ username, password }),
+      });
 
-    setLoading(false);
-
-    if (result?.error) {
-      setError("Sai tên đăng nhập hoặc mật khẩu");
-    } else {
-      router.push("/cms");
-      router.refresh();
+      if (res.ok) {
+        router.push("/cms");
+        router.refresh();
+      } else {
+        const data = await res.json();
+        setError(data.error || "Sai tên đăng nhập hoặc mật khẩu");
+      }
+    } catch {
+      setError("Có lỗi xảy ra, vui lòng thử lại");
+    } finally {
+      setLoading(false);
     }
   }
 
@@ -55,7 +59,7 @@ export default function CmsLoginPage() {
               type="text"
               value={username}
               onChange={(e) => setUsername(e.target.value)}
-              className="w-full px-3 py-2 border rounded text-sm focus:outline-none focus:ring-2 focus:ring-amber-400"
+              className="w-full px-3 py-2 border rounded text-sm focus:outline-none focus:ring-2 focus:ring-cam-chay-400"
               required
             />
           </div>
@@ -69,7 +73,7 @@ export default function CmsLoginPage() {
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="w-full px-3 py-2 border rounded text-sm focus:outline-none focus:ring-2 focus:ring-amber-400"
+              className="w-full px-3 py-2 border rounded text-sm focus:outline-none focus:ring-2 focus:ring-cam-chay-400"
               required
             />
           </div>
@@ -77,7 +81,7 @@ export default function CmsLoginPage() {
           <button
             type="submit"
             disabled={loading}
-            className="w-full py-2 bg-amber-600 hover:bg-amber-700 disabled:bg-amber-300 text-white font-medium rounded transition-colors"
+            className="w-full py-2 bg-cam-chay hover:bg-cam-chay-600 disabled:bg-cam-chay-300 text-white font-medium rounded transition-colors"
           >
             {loading ? "Đang đăng nhập..." : "Đăng nhập"}
           </button>

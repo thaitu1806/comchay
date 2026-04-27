@@ -1,7 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { useSession } from "next-auth/react";
+import { useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { useCartStore, getCartKey } from "@/store/cart";
@@ -32,16 +31,13 @@ interface FormErrors {
 }
 
 export default function OrderPage() {
-  const { data: session } = useSession();
   const items = useCartStore((state) => state.items);
   const getSubtotal = useCartStore((state) => state.getSubtotal);
   const getTotalBags = useCartStore((state) => state.getTotalBags);
   const clearCart = useCartStore((state) => state.clearCart);
 
-  const [customerName, setCustomerName] = useState(session?.user?.name || "");
-  const [facebookLink, setFacebookLink] = useState(
-    (session as any)?.facebookLink || ""
-  );
+  const [customerName, setCustomerName] = useState("");
+  const [facebookLink, setFacebookLink] = useState("");
   const [address, setAddress] = useState("");
   const [phone, setPhone] = useState("");
   const [region, setRegion] = useState<Region | "">("");
@@ -49,16 +45,6 @@ export default function OrderPage() {
   const [submitting, setSubmitting] = useState(false);
   const [successMessage, setSuccessMessage] = useState("");
   const [errorMessage, setErrorMessage] = useState("");
-
-  // Auto-fill from session when it loads
-  useEffect(() => {
-    if (session?.user?.name) {
-      setCustomerName(session.user.name);
-    }
-    if ((session as any)?.facebookLink) {
-      setFacebookLink((session as any).facebookLink);
-    }
-  }, [session]);
 
   // Compute shipping fee realtime based on region
   const subtotal = getSubtotal();

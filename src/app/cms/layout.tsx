@@ -1,8 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
-import { signOut } from "next-auth/react";
+import { usePathname, useRouter } from "next/navigation";
 import { useState } from "react";
 
 const navItems = [
@@ -14,7 +13,14 @@ const navItems = [
 
 export default function CmsLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
+  const router = useRouter();
   const [sidebarOpen, setSidebarOpen] = useState(false);
+
+  async function handleLogout() {
+    await fetch("/api/cms-auth/logout", { method: "POST" });
+    router.push("/cms/login");
+    router.refresh();
+  }
 
   return (
     <div className="min-h-screen flex flex-col md:flex-row bg-gray-50">
@@ -55,7 +61,7 @@ export default function CmsLayout({ children }: { children: React.ReactNode }) {
                 onClick={() => setSidebarOpen(false)}
                 className={`block px-3 py-2 rounded text-sm ${
                   isActive
-                    ? "bg-amber-100 text-amber-800 font-medium"
+                    ? "bg-cam-chay-100 text-cam-chay-800 font-medium"
                     : "text-gray-600 hover:bg-gray-100"
                 }`}
               >
@@ -64,7 +70,7 @@ export default function CmsLayout({ children }: { children: React.ReactNode }) {
             );
           })}
           <button
-            onClick={() => signOut({ callbackUrl: "/cms/login" })}
+            onClick={handleLogout}
             className="block w-full text-left px-3 py-2 rounded text-sm text-red-600 hover:bg-red-50 mt-2"
           >
             Đăng xuất
