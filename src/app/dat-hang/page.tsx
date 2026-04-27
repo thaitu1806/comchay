@@ -343,6 +343,37 @@ export default function OrderPage() {
                 <span className="text-cam-chay">{region ? formatPrice(total) : "—"}</span>
               </div>
             </div>
+
+            {/* Shipping fee table */}
+            <div className="mt-4 pt-4 border-t border-cam-chay-100">
+              <p className="text-xs font-medium text-cam-chay-800 mb-2">🚚 Bảng phí vận chuyển</p>
+              <div className="space-y-1 text-xs text-cam-chay-600">
+                <div className="flex justify-between">
+                  <span>1 túi</span>
+                  <span>30.000đ</span>
+                </div>
+                <div className="flex justify-between">
+                  <span>2 túi</span>
+                  <span>20.000đ</span>
+                </div>
+                <div className="flex justify-between">
+                  <span>3 túi</span>
+                  <span>15.000đ</span>
+                </div>
+                <div className="flex justify-between font-medium text-green-600">
+                  <span>4 túi trở lên (HCM)</span>
+                  <span>Miễn phí ✓</span>
+                </div>
+                <div className="flex justify-between">
+                  <span>4 túi (Tỉnh khác)</span>
+                  <span>10.000đ</span>
+                </div>
+                <div className="flex justify-between font-medium text-green-600">
+                  <span>5 túi trở lên (Tỉnh khác)</span>
+                  <span>Miễn phí ✓</span>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </div>
