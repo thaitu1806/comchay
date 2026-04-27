@@ -1,10 +1,13 @@
 import { isValidVietnamesePhone } from "@/lib/phone";
 
+const VALID_REGIONS = ["HCM", "TINH_KHAC"] as const;
+
 export interface OrderFormData {
   customerName?: string | null;
   address?: string | null;
   phone?: string | null;
   facebookLink?: string | null;
+  region?: string | null;
   items?: unknown[];
 }
 
@@ -35,6 +38,14 @@ export function validateOrderForm(data: OrderFormData): string[] {
     errors.push("Số điện thoại là bắt buộc");
   } else if (!isValidVietnamesePhone(data.phone)) {
     errors.push("Số điện thoại không hợp lệ");
+  }
+
+  if (
+    !data.region ||
+    typeof data.region !== "string" ||
+    !VALID_REGIONS.includes(data.region as (typeof VALID_REGIONS)[number])
+  ) {
+    errors.push("Vui lòng chọn khu vực giao hàng");
   }
 
   if (!data.items || !Array.isArray(data.items) || data.items.length === 0) {

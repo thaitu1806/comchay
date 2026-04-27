@@ -10,6 +10,8 @@ interface OrderItem {
   productPrice: number;
   quantity: number;
   lineTotal: number;
+  variantId?: number | null;
+  variantLabel?: string | null;
 }
 
 interface Order {
@@ -18,6 +20,7 @@ interface Order {
   facebookLink: string | null;
   address: string;
   phone: string;
+  region: string | null;
   subtotal: number;
   shippingFee: number;
   total: number;
@@ -43,6 +46,13 @@ function formatDate(dateStr: string | null): string {
   } catch {
     return dateStr;
   }
+}
+
+function formatRegion(region: string | null): string {
+  if (!region) return "—";
+  if (region === "HCM") return "TP.HCM";
+  if (region === "TINH_KHAC") return "Tỉnh khác";
+  return region;
 }
 
 export default function CmsOrdersPage() {
@@ -101,7 +111,18 @@ export default function CmsOrdersPage() {
                   <span className="text-gray-500 hidden sm:inline truncate max-w-[200px]">
                     {order.address}
                   </span>
-                  <span className="font-medium text-amber-700">{formatPrice(order.total)}</span>
+                  <span
+                    className={`inline-block px-2 py-0.5 rounded text-xs font-medium ${
+                      order.region === "HCM"
+                        ? "bg-blue-50 text-blue-600"
+                        : order.region === "TINH_KHAC"
+                        ? "bg-purple-50 text-purple-600"
+                        : "bg-gray-50 text-gray-500"
+                    }`}
+                  >
+                    {formatRegion(order.region)}
+                  </span>
+                  <span className="font-medium text-cam-chay-700">{formatPrice(order.total)}</span>
                   <span
                     className={`inline-block px-2 py-0.5 rounded text-xs font-medium ${
                       order.status === "mới"
@@ -138,6 +159,10 @@ export default function CmsOrdersPage() {
                       <span className="text-gray-500">SĐT:</span>{" "}
                       <span className="text-gray-800">{order.phone}</span>
                     </div>
+                    <div>
+                      <span className="text-gray-500">Khu vực:</span>{" "}
+                      <span className="text-gray-800">{formatRegion(order.region)}</span>
+                    </div>
                     <div className="sm:col-span-2">
                       <span className="text-gray-500">Địa chỉ:</span>{" "}
                       <span className="text-gray-800">{order.address}</span>
@@ -156,7 +181,14 @@ export default function CmsOrdersPage() {
                       <tbody>
                         {order.items.map((item) => (
                           <tr key={item.id} className="border-b last:border-b-0">
-                            <td className="py-1.5 text-gray-800">{item.productName}</td>
+                            <td className="py-1.5">
+                              <span className="text-gray-800">{item.productName}</span>
+                              {item.variantLabel && (
+                                <span className="block text-xs text-gray-500">
+                                  {item.variantLabel}
+                                </span>
+                              )}
+                            </td>
                             <td className="py-1.5 text-center text-gray-600">{item.quantity}</td>
                             <td className="py-1.5 text-right text-gray-800">
                               {formatPrice(item.lineTotal)}
@@ -176,7 +208,7 @@ export default function CmsOrdersPage() {
                     <div className="text-gray-500">
                       Phí vận chuyển: <span className="text-gray-800">{formatPrice(order.shippingFee)}</span>
                     </div>
-                    <div className="font-medium text-amber-700">
+                    <div className="font-medium text-cam-chay-700">
                       Tổng: {formatPrice(order.total)}
                     </div>
                   </div>

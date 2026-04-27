@@ -11,6 +11,8 @@ export const products = sqliteTable("products", {
   price: integer("price").notNull(),
   thumbnailUrl: text("thumbnail_url"),
   status: text("status").default("active"),
+  badge: text("badge"),
+  stockStatus: text("stock_status").default("in_stock"),
   createdAt: text("created_at").default(sql`CURRENT_TIMESTAMP`),
   updatedAt: text("updated_at").default(sql`CURRENT_TIMESTAMP`),
 });
@@ -18,6 +20,26 @@ export const products = sqliteTable("products", {
 export const productsRelations = relations(products, ({ many }) => ({
   media: many(productMedia),
   orderItems: many(orderItems),
+  variants: many(productVariants),
+}));
+
+// ── Product Variants ────────────────────────────────────────────────────────
+
+export const productVariants = sqliteTable("product_variants", {
+  id: integer("id").primaryKey({ autoIncrement: true }),
+  productId: integer("product_id").references(() => products.id).notNull(),
+  riceType: text("rice_type"),
+  spiceLevel: text("spice_level"),
+  weight: integer("weight").notNull(),
+  price: integer("price").notNull(),
+  createdAt: text("created_at").default(sql`CURRENT_TIMESTAMP`),
+});
+
+export const productVariantsRelations = relations(productVariants, ({ one }) => ({
+  product: one(products, {
+    fields: [productVariants.productId],
+    references: [products.id],
+  }),
 }));
 
 // ── Product Media ───────────────────────────────────────────────────────────
@@ -46,6 +68,7 @@ export const orders = sqliteTable("orders", {
   facebookLink: text("facebook_link"),
   address: text("address").notNull(),
   phone: text("phone").notNull(),
+  region: text("region").notNull().default("HCM"),
   subtotal: integer("subtotal").notNull(),
   shippingFee: integer("shipping_fee").notNull(),
   total: integer("total").notNull(),
@@ -67,6 +90,8 @@ export const orderItems = sqliteTable("order_items", {
   productPrice: integer("product_price").notNull(),
   quantity: integer("quantity").notNull(),
   lineTotal: integer("line_total").notNull(),
+  variantId: integer("variant_id"),
+  variantLabel: text("variant_label"),
 });
 
 export const orderItemsRelations = relations(orderItems, ({ one }) => ({
@@ -86,4 +111,13 @@ export const pageVisits = sqliteTable("page_visits", {
   id: integer("id").primaryKey({ autoIncrement: true }),
   visitedAt: text("visited_at").default(sql`CURRENT_TIMESTAMP`),
   pagePath: text("page_path").notNull(),
+});
+
+// ── Site Settings ───────────────────────────────────────────────────────────
+
+export const siteSettings = sqliteTable("site_settings", {
+  id: integer("id").primaryKey({ autoIncrement: true }),
+  key: text("key").unique().notNull(),
+  value: text("value").notNull(),
+  updatedAt: text("updated_at").default(sql`CURRENT_TIMESTAMP`),
 });
