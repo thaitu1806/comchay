@@ -101,27 +101,34 @@ export default function ProductForm({ initialData, onSubmit }: ProductFormProps)
   }
 
   async function handleFileUpload(e: React.ChangeEvent<HTMLInputElement>) {
-    const file = e.target.files?.[0];
-    if (!file) return;
+    const files = e.target.files;
+    if (!files || files.length === 0) return;
 
     setUploading(true);
     setError("");
 
     try {
-      const formData = new FormData();
-      formData.append("file", file);
+      for (let i = 0; i < files.length; i++) {
+        const formData = new FormData();
+        formData.append("file", files[i]);
 
-      const res = await fetch("/api/upload", { method: "POST", body: formData });
-      const data = await res.json();
+        const res = await fetch("/api/upload", { method: "POST", body: formData });
+        const data = await res.json();
 
-      if (!res.ok) {
-        setError(data.error || "Tải file thất bại");
-        return;
-      }
+        if (!res.ok) {
+          setError(data.error || `Tải file ${files[i].name} thất bại`);
+          continue;
+        }
 
-      setMedia((prev) => [...prev, { url: data.url, type: data.type }]);
-      if (!thumbnailUrl) {
-        setThumbnailUrl(data.url);
+        const newItem: MediaItem = { url: data.url, type: data.type };
+        setMedia((prev) => {
+          const updated = [...prev, newItem];
+          // Auto-set first image as thumbnail if none set
+          if (!thumbnailUrl && newItem.type === "image") {
+            setThumbnailUrl(newItem.url);
+          }
+          return updated;
+        });
       }
     } catch {
       setError("Tải file thất bại, vui lòng thử lại");
@@ -317,10 +324,11 @@ export default function ProductForm({ initialData, onSubmit }: ProductFormProps)
       </div>
 
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1">Upload ảnh/video</label>
+        <label className="block text-sm font-medium text-gray-700 mb-1">Upload ảnh/video (chọn nhiều file)</label>
         <input
           type="file"
           accept="image/*,video/*"
+          multiple
           onChange={handleFileUpload}
           disabled={uploading}
           className="w-full text-sm text-gray-500 file:mr-3 file:py-1.5 file:px-3 file:rounded file:border-0 file:text-sm file:bg-cam-chay-50 file:text-cam-chay-700 hover:file:bg-cam-chay-100"
@@ -330,24 +338,41 @@ export default function ProductForm({ initialData, onSubmit }: ProductFormProps)
 
       {media.length > 0 && (
         <div>
-          <p className="text-sm font-medium text-gray-700 mb-2">Media đã tải ({media.length})</p>
+          <p className="text-sm font-medium text-gray-700 mb-1">Media đã tải ({media.length})</p>
+          <p className="text-xs text-gray-500 mb-2">Nhấn vào ảnh để chọn làm ảnh trang chính (thumbnail)</p>
           <div className="grid grid-cols-3 gap-2">
-            {media.map((item, i) => (
-              <div key={i} className="relative group">
-                {item.type === "image" ? (
-                  <img src={item.url} alt="" className="w-full h-20 object-cover rounded" />
-                ) : (
-                  <video src={item.url} className="w-full h-20 object-cover rounded" />
-                )}
-                <button
-                  type="button"
-                  onClick={() => removeMedia(i)}
-                  className="absolute top-1 right-1 w-5 h-5 bg-red-500 text-white rounded-full text-xs flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
-                >
-                  ×
-                </button>
-              </div>
-            ))}
+            {media.map((item, i) => {
+              const isThumbnail = item.url === thumbnailUrl;
+              return (
+                <div key={i} className="relative group">
+                  {item.type === "image" ? (
+                    <button
+                      type="button"
+                      onClick={() => setThumbnailUrl(item.url)}
+                      className={`w-full block rounded overflow-hidden border-2 transition-colors ${
+                        isThumbnail ? "border-cam-chay ring-2 ring-cam-chay-300" : "border-transparent hover:border-cam-chay-200"
+                      }`}
+                    >
+                      <img src={item.url} alt="" className="w-full h-20 object-cover" />
+                    </button>
+                  ) : (
+                    <video src={item.url} className="w-full h-20 object-cover rounded" />
+                  )}
+                  {isThumbnail && (
+                    <span className="absolute top-1 left-1 bg-cam-chay text-white text-[10px] px-1.5 py-0.5 rounded font-medium">
+                      Trang chính
+                    </span>
+                  )}
+                  <button
+                    type="button"
+                    onClick={() => removeMedia(i)}
+                    className="absolute top-1 right-1 w-5 h-5 bg-red-500 text-white rounded-full text-xs flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+                  >
+                    ×
+                  </button>
+                </div>
+              );
+            })}
           </div>
         </div>
       )}
